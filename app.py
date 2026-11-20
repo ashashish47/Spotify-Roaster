@@ -7,6 +7,7 @@ import plotly.graph_objects as go
 import spotipy
 from spotipy.oauth2 import SpotifyOAuth
 from google import genai
+from spotipy.cache_handler import MemoryCacheHandler
 
 st.set_page_config(page_title="Spotify Roast",page_icon="🎵",layout="wide")
 
@@ -106,12 +107,17 @@ h1,h2,h3{color:#1DB954!important}
 API_KEY=st.secrets["GEMINI_API_KEY"]
 client=genai.Client(api_key=API_KEY)
 
-sp_oauth=SpotifyOAuth(
-client_id = st.secrets["SPOTIFY_CLIENT_ID"],
-client_secret = st.secrets["SPOTIFY_CLIENT_SECRET"],
-redirect_uri = st.secrets["SPOTIFY_REDIRECT_URI"],
-scope="user-top-read user-read-private user-read-email",
-cache_path=None)
+if "cache_handler" not in st.session_state:
+    st.session_state.cache_handler = MemoryCacheHandler()
+
+sp_oauth = SpotifyOAuth(
+    client_id=st.secrets["SPOTIFY_CLIENT_ID"],
+    client_secret=st.secrets["SPOTIFY_CLIENT_SECRET"],
+    redirect_uri=st.secrets["SPOTIFY_REDIRECT_URI"],
+    scope="user-top-read user-read-private user-read-email",
+    cache_handler=st.session_state.cache_handler
+)
+
 
 params=st.query_params
 if 'code' not in params:

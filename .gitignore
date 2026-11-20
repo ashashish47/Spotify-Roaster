@@ -2,5 +2,6 @@
 .env
 __pycache__/
 .cache
+.cache-*
 spo_roast/
 .spo_roast/

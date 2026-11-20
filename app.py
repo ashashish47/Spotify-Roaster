@@ -7,7 +7,7 @@ import plotly.graph_objects as go
 import spotipy
 from spotipy.oauth2 import SpotifyOAuth
 from google import genai
-from spotipy.cache_handler import MemoryCacheHandler
+# from spotipy.cache_handler import MemoryCacheHandler
 
 st.set_page_config(page_title="Spotify Roast",page_icon="🎵",layout="wide")
 
@@ -107,46 +107,72 @@ h1,h2,h3{color:#1DB954!important}
 API_KEY=st.secrets["GEMINI_API_KEY"]
 client=genai.Client(api_key=API_KEY)
 
-if "cache_handler" not in st.session_state:
-    st.session_state.cache_handler = MemoryCacheHandler()
+
+# if "cache_handler" not in st.session_state:
+#     st.session_state.cache_handler = MemoryCacheHandler()
 
 sp_oauth = SpotifyOAuth(
     client_id=st.secrets["SPOTIFY_CLIENT_ID"],
     client_secret=st.secrets["SPOTIFY_CLIENT_SECRET"],
     redirect_uri=st.secrets["SPOTIFY_REDIRECT_URI"],
     scope="user-top-read user-read-private user-read-email",
-    cache_handler=st.session_state.cache_handler
+    # cache_handler=st.session_state.cache_handler
+    cache_path=None
 )
 
 
-params=st.query_params
-if 'code' not in params:
-    st.title('🎵 Spotify Roast')
-    st.markdown('### Spotify Wrapped + AI Roast')
-    st.link_button('Login with Spotify',sp_oauth.get_authorize_url())
-    st.stop()
+# params=st.query_params
+# if 'code' not in params:
+#     st.title('🎵 Spotify Roast')
+#     st.markdown('### Spotify Wrapped + AI Roast')
+#     st.link_button('Login with Spotify',sp_oauth.get_authorize_url())
+#     st.stop()
 
-code = st.query_params.get("code")
+# code = st.query_params.get("code")
 
-if code and "token_info" not in st.session_state:
-    st.session_state["token_info"] = sp_oauth.get_access_token(code)
+# if code and "token_info" not in st.session_state:
+#     st.session_state["token_info"] = sp_oauth.get_access_token(code)
 
-if "token_info" not in st.session_state:
+# if "token_info" not in st.session_state:
+#     st.link_button(
+#         "Login with Spotify",
+#         sp_oauth.get_authorize_url()
+#     )
+#     st.stop()
+
+# sp = spotipy.Spotify(
+#     auth=st.session_state["token_info"]["access_token"]
+# )
+
+params = st.query_params
+
+if "code" not in params:
+    st.title("🎵 Spotify Roast")
+    st.markdown("### Spotify Wrapped + AI Roast")
     st.link_button(
         "Login with Spotify",
         sp_oauth.get_authorize_url()
     )
     st.stop()
 
-sp = spotipy.Spotify(
-    auth=st.session_state["token_info"]["access_token"]
-)
+try:
+    token_info = sp_oauth.get_access_token(
+        params["code"]
+    )
+
+    sp = spotipy.Spotify(
+        auth=token_info["access_token"]
+    )
+
+except Exception as e:
+    st.error(f"Spotify Login Error: {e}")
+    st.stop()
 
 if st.sidebar.button("Logout"):
     st.session_state.clear()
     st.query_params.clear()
     st.rerun()
-
+    
 user=sp.current_user()
 artists_data=sp.current_user_top_artists(limit=20,time_range='medium_term')
 tracks_data=sp.current_user_top_tracks(limit=20,time_range='medium_term')

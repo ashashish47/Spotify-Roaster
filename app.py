@@ -110,7 +110,8 @@ sp_oauth=SpotifyOAuth(
 client_id = st.secrets["SPOTIFY_CLIENT_ID"],
 client_secret = st.secrets["SPOTIFY_CLIENT_SECRET"],
 redirect_uri = st.secrets["SPOTIFY_REDIRECT_URI"],
-scope='user-top-read')
+scope="user-top-read user-read-private user-read-email",
+cache_path=None)
 
 params=st.query_params
 if 'code' not in params:
@@ -119,8 +120,26 @@ if 'code' not in params:
     st.link_button('Login with Spotify',sp_oauth.get_authorize_url())
     st.stop()
 
-token_info=sp_oauth.get_access_token(params['code'])
-sp=spotipy.Spotify(auth=token_info['access_token'])
+code = st.query_params.get("code")
+
+if code and "token_info" not in st.session_state:
+    st.session_state["token_info"] = sp_oauth.get_access_token(code)
+
+if "token_info" not in st.session_state:
+    st.link_button(
+        "Login with Spotify",
+        sp_oauth.get_authorize_url()
+    )
+    st.stop()
+
+sp = spotipy.Spotify(
+    auth=st.session_state["token_info"]["access_token"]
+)
+
+if st.sidebar.button("Logout"):
+    st.session_state.clear()
+    st.query_params.clear()
+    st.rerun()
 
 user=sp.current_user()
 artists_data=sp.current_user_top_artists(limit=20,time_range='medium_term')

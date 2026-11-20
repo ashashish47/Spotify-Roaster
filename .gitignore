@@ -1,0 +1,6 @@
+.streamlit/secrets.toml
+.env
+__pycache__/
+.cache
+spo_roast/
+.spo_roast/

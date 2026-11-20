@@ -7,7 +7,7 @@ import plotly.graph_objects as go
 import spotipy
 from spotipy.oauth2 import SpotifyOAuth
 from google import genai
-# from spotipy.cache_handler import MemoryCacheHandler
+from spotipy.cache_handler import MemoryCacheHandler
 
 st.set_page_config(page_title="Spotify Roast",page_icon="🎵",layout="wide")
 
@@ -107,43 +107,31 @@ h1,h2,h3{color:#1DB954!important}
 API_KEY=st.secrets["GEMINI_API_KEY"]
 client=genai.Client(api_key=API_KEY)
 
-# if "cache_handler" not in st.session_state:
-#     st.session_state.cache_handler = MemoryCacheHandler()
+if "cache_handler" not in st.session_state:
+    st.session_state.cache_handler = MemoryCacheHandler()
 
 sp_oauth = SpotifyOAuth(
     client_id=st.secrets["SPOTIFY_CLIENT_ID"],
     client_secret=st.secrets["SPOTIFY_CLIENT_SECRET"],
     redirect_uri=st.secrets["SPOTIFY_REDIRECT_URI"],
     scope="user-top-read user-read-private user-read-email",
-    # cache_handler=st.session_state.cache_handler
-    cache_path=None
+    cache_handler=st.session_state.cache_handler
 )
 
 
-# params=st.query_params
-# if 'code' not in params:
-#     st.title('🎵 Spotify Roast')
-#     st.markdown('### Spotify Wrapped + AI Roast')
-#     st.link_button('Login with Spotify',sp_oauth.get_authorize_url())
-#     st.stop()
+params=st.query_params
+if 'code' not in params:
+    st.title('🎵 Spotify Roast')
+    st.markdown('### Spotify Wrapped + AI Roast')
+    st.link_button('Login with Spotify',sp_oauth.get_authorize_url())
+    st.stop()
 
 code = st.query_params.get("code")
 
 if code and "token_info" not in st.session_state:
-    try:
-        token_info = sp_oauth.get_access_token(code)
-        st.session_state["token_info"] = token_info
-
-        # Remove code from URL so refreshes don't reuse it
-        st.query_params.clear()
-        st.rerun()
-
-    except Exception as e:
-        st.error(f"Login failed: {e}")
-        st.stop()
+    st.session_state["token_info"] = sp_oauth.get_access_token(code)
 
 if "token_info" not in st.session_state:
-    st.title("🎵 Spotify Roast")
     st.link_button(
         "Login with Spotify",
         sp_oauth.get_authorize_url()
